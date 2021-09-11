@@ -5,7 +5,7 @@
     android:orientation="vertical"
     android:weightSum="2"
     android:theme="@style/Theme.TodaysSummerDay.AppWidgetContainer">
-
+    
     <TextView
         android:id="@+id/cur_date"
         style="@style/Widget.TodaysSummerDay.AppWidget.InnerView"
