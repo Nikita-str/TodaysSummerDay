@@ -14,7 +14,6 @@ import android.app.PendingIntent
 import android.content.ComponentName
 import android.widget.Toast
 
-
 const val WIDGET_UPD = "ALARM_WIDGET_UPD";
 
 class SummerWidget : AppWidgetProvider() {
@@ -31,7 +30,7 @@ class SummerWidget : AppWidgetProvider() {
 
     override fun onEnabled(context: Context) {
         super.onEnabled(context)
-        val intent = Intent(WIDGET_UPD)
+        val intent = Intent(context, javaClass)
         val alarm_intent = PendingIntent.getBroadcast(context, 0, intent, 0)
 
         val c = Calendar.getInstance()
@@ -57,7 +56,7 @@ class SummerWidget : AppWidgetProvider() {
 
         if(context == null) return
 
-        if (intent != null && intent.getAction().equals(WIDGET_UPD)) {
+        if (intent != null /*&& intent.getAction().equals(WIDGET_UPD)*/) {
             Toast.makeText(context, WIDGET_UPD, Toast.LENGTH_LONG).show() //TODO:DEL
 
             val widget_mgr = AppWidgetManager.getInstance(context)

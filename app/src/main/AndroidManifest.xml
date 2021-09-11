@@ -22,6 +22,9 @@
             <intent-filter>
                 <action android:name="ALARM_WIDGET_UPD" />
             </intent-filter>
+            <intent-filter>
+                <action android:name="com.endless_summer.todays_summer_day.SummerWidget" android:enabled="true"/>
+            </intent-filter>
 
             <meta-data
                 android:name="android.appwidget.provider"
