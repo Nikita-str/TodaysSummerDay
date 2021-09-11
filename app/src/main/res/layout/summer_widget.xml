@@ -1,22 +1,47 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     style="@style/Widget.TodaysSummerDay.AppWidget.Container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:weightSum="2"
     android:theme="@style/Theme.TodaysSummerDay.AppWidgetContainer">
-    
-    <TextView
-        android:id="@+id/cur_date"
-        style="@style/Widget.TodaysSummerDay.AppWidget.InnerView"
+
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_weight="1"
-        android:autoSizeTextType="uniform"
-        android:text="@string/cur_date"
-        android:textSize="24sp"
-        android:textStyle="bold" />
-
+        android:weightSum="6">
+        <TextView
+            android:id="@+id/cur_date"
+            style="@style/Widget.TodaysSummerDay.AppWidget.InnerView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="3"
+            android:autoSizeTextType="uniform"
+            android:text="@string/cur_date"
+            android:gravity="bottom|start"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+        <ImageView
+            android:layout_height="match_parent"
+            android:layout_width="match_parent"
+            android:layout_weight="3"
+            app:layout_constraintDimensionRatio="H,1:1"
+            app:layout_constraintRight_toRightOf="parent"
+            android:src="@drawable/ic_launcher_foreground" />
+        <!--androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="3">
+            <ImageView
+                android:layout_height="match_parent"
+                android:layout_width="wrap_content"
+                app:layout_constraintDimensionRatio="H,1:1"
+                app:layout_constraintRight_toRightOf="parent"
+                android:src="@drawable/ic_launcher_foreground" />
+        </androidx.constraintlayout.widget.ConstraintLayout-->
+    </LinearLayout>
     <TextView
         android:id="@+id/day_of_summer"
         style="@style/Widget.TodaysSummerDay.AppWidget.InnerView"
@@ -24,6 +49,7 @@
         android:layout_height="match_parent"
         android:layout_weight="1"
         android:autoSizeTextType="uniform"
+        android:gravity="top|start"
         android:layout_marginStart="20dp"
         android:text="@string/summer_day"
         android:textSize="24sp"
