@@ -3,17 +3,20 @@ package com.endless_summer.todays_summer_day
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.Context
+import android.content.Intent
 
 import android.widget.RemoteViews
 import java.util.*
 import android.os.Build
+import android.app.AlarmManager
+
+import android.app.PendingIntent
+import android.content.ComponentName
+import android.widget.Toast
 
 
+const val WIDGET_UPD = "ALARM_WIDGET_UPD";
 
-
-/**
- * Implementation of App Widget functionality.
- */
 class SummerWidget : AppWidgetProvider() {
     override fun onUpdate(
         context: Context,
@@ -27,11 +30,41 @@ class SummerWidget : AppWidgetProvider() {
     }
 
     override fun onEnabled(context: Context) {
-        // Enter relevant functionality for when the first widget is created
+        super.onEnabled(context)
+        val intent = Intent(WIDGET_UPD)
+        val alarm_intent = PendingIntent.getBroadcast(context, 0, intent, 0)
+
+        val c = Calendar.getInstance()
+        c[Calendar.HOUR_OF_DAY] = 0
+        c[Calendar.MINUTE] = 0
+        c[Calendar.SECOND] = 0
+        c[Calendar.MILLISECOND] = 100
+
+        val alarm = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        alarm.setInexactRepeating(AlarmManager.RTC, c.timeInMillis, AlarmManager.INTERVAL_DAY, alarm_intent)
     }
 
     override fun onDisabled(context: Context) {
-        // Enter relevant functionality for when the last widget is disabled
+        super.onDisabled(context)
+
+        val intent = Intent(WIDGET_UPD)
+        val alarm = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        alarm.cancel(PendingIntent.getBroadcast(context, 0, intent, 0))
+    }
+
+    override fun onReceive(context: Context?, intent: Intent?) {
+        super.onReceive(context, intent)
+
+        if(context == null) return
+
+        if (intent != null && intent.getAction().equals(WIDGET_UPD)) {
+            Toast.makeText(context, WIDGET_UPD, Toast.LENGTH_LONG).show() //TODO:DEL
+
+            val widget_mgr = AppWidgetManager.getInstance(context)
+            val component_name = ComponentName(context.packageName, javaClass.name)
+            val ids = widget_mgr.getAppWidgetIds(component_name)
+            onUpdate(context, widget_mgr, ids)
+        }
     }
 }
 
