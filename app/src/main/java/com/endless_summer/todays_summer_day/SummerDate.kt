@@ -11,6 +11,11 @@ const val SEC_IN_MIN = 60
 const val MIN_IN_HOUR = 60
 const val HOUR_IN_DAY = 24
 
+const val DAYS_IN_JUNE = 30
+const val DAYS_IN_JULY = 31
+const val DAYS_IN_AUGUST = 31
+const val DAYS_IN_START_OF_SUMMER = DAYS_IN_JUNE + DAYS_IN_JULY + DAYS_IN_AUGUST
+
 class SummerDate {
     protected val engMonthName = AllMonthName(Locale.ENGLISH)
     protected var curMonthName = AllMonthName(Locale.getDefault())
@@ -21,12 +26,13 @@ class SummerDate {
     fun MonthIsSummer(month_ind: Int = GetCurrentMonth()) =
         Calendar.JUNE <= month_ind && month_ind <= Calendar.AUGUST
 
-    data class SumDate(val monthName : String, val monthDay: Int)
+    data class SumDate(val monthDay: Int, val monthName : String, val dayOfSummer: Int)
     fun GetCurSummerDate() : SumDate{
         if (curMonthName.locale != Locale.getDefault())
             curMonthName = AllMonthName(Locale.getDefault())
 
-        return SumDate(GetCurMonthName(), GetCurMonthDay())
+        val monthDay = GetCurMonthDay()
+        return SumDate(monthDay, GetCurMonthName(), GetCurDayOfSummer(monthDay))
     }
 
     fun GetCurMonthName() : String {
@@ -49,7 +55,7 @@ class SummerDate {
     private fun DeltaTimeToDay(dt: Long) : Int =
         ((((dt / MS_IN_SEC) / SEC_IN_MIN) / MIN_IN_HOUR) / HOUR_IN_DAY).toInt()
 
-    fun GetCurMonthDay() : Int{
+    fun GetCurMonthDay(/*cur_month_ind: Int = GetCurrentMonth()*/) : Int{
         val cur_month_ind = GetCurrentMonth()
         if(MonthIsSummer(cur_month_ind)) return GetCurrentDay()
 
@@ -65,5 +71,12 @@ class SummerDate {
         return DayBetweenCalend(c0 ,c1)
     }
 
+    fun GetCurDayOfSummer(month_day: Int) : Int{
+        val cur_month_ind = GetCurrentMonth()
+        if(cur_month_ind == Calendar.JUNE)return month_day
+        if(cur_month_ind == Calendar.JULY)return month_day + DAYS_IN_JUNE
+        // if (not June) and (not Lule) => August
+        return month_day + DAYS_IN_JUNE + DAYS_IN_JULY
+    }
 
 }

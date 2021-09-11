@@ -19,6 +19,6 @@ class ExampleUnitTest {
     @Test
     fun temp_test() {
         val x = SummerDate().GetCurSummerDate()
-        println(x.monthName + " " + x.monthDay)
+        println("" + x.monthDay + " " + x.monthName + ";  " + x.dayOfSummer + " день лета")
     }
 }
