@@ -3,6 +3,7 @@ package com.endless_summer.todays_summer_day
 import org.junit.Test
 
 import org.junit.Assert.*
+import java.io.Console
 
 /**
  * Example local unit test, which will execute on the development machine (host).
@@ -13,5 +14,11 @@ class ExampleUnitTest {
     @Test
     fun addition_isCorrect() {
         assertEquals(4, 2 + 2)
+    }
+
+    @Test
+    fun temp_test() {
+        val x = SummerDate().GetCurSummerDate()
+        println(x.monthName + " " + x.monthDay)
     }
 }

@@ -45,7 +45,7 @@ class SummerDate {
         c.set(Calendar.MILLISECOND, c.getActualMinimum(Calendar.MILLISECOND))
     }
     private fun DayBetweenCalend(c_from: Calendar, c_to: Calendar) =
-        DeltaTimeToDay(c_to.getTime().getTime() + MS_IN_SEC - c_from.getTime().getTime())
+        DeltaTimeToDay(c_to.getTime().getTime() + MS_IN_SEC - c_from.getTime().getTime()) + 1
     private fun DeltaTimeToDay(dt: Long) : Int =
         ((((dt / MS_IN_SEC) / SEC_IN_MIN) / MIN_IN_HOUR) / HOUR_IN_DAY).toInt()
 
@@ -57,12 +57,11 @@ class SummerDate {
         if(!MonthAfterSummer(cur_month_ind)) c0.set(Calendar.YEAR, c0.get(Calendar.YEAR) - 1)
         c0.set(Calendar.DAY_OF_MONTH, 1)
         c0.set(Calendar.MONTH, Calendar.AUGUST)
-        c0.set(Calendar.DAY_OF_MONTH, c0.getActualMaximum(Calendar.DAY_OF_MONTH))
         SetLastToMin(c0)
 
         val c1 = Calendar.getInstance()
         SetLastToMin(c1)
-        
+
         return DayBetweenCalend(c0 ,c1)
     }
 

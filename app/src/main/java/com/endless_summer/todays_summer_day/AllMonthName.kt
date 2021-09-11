@@ -27,15 +27,15 @@ class AllMonthName(val locale: Locale = Locale.ROOT) {
     init {
         val calendar = Calendar.getInstance()
         calendar.set(Calendar.DAY_OF_MONTH, 1)
-        for (i in Calendar.JANUARY until Calendar.DECEMBER) {
+        for (i in Calendar.JANUARY .. Calendar.DECEMBER) {
             calendar.set(Calendar.MONTH, i)
             val month = calendar.getDisplayName(Calendar.MONTH, Calendar.LONG, locale)
             if (month == null || month.length == 0) {
                 badMonth++
                 badMonthInd.add(i)
-                monthName[i] = ""
+                monthName.add("")
             } else {
-                monthName[i] = month
+                monthName.add(month)
             }
         }
     }
