@@ -5,8 +5,8 @@
      and @android:dimen/system_app_widget_internal_padding requires API level 31
     -->
     <style name="Theme.TodaysSummerDay.AppWidgetContainerParent" parent="@android:style/Theme.DeviceDefault.DayNight">
-        <item name="appWidgetRadius">@android:dimen/system_app_widget_background_radius</item>
-        <item name="appWidgetPadding">@android:dimen/system_app_widget_internal_padding</item>
-        <item name="appWidgetInnerRadius">@android:dimen/system_app_widget_inner_radius</item>
+        <item name="appWidgetRadius">@dimen/system_app_widget_background_radius</item>
+        <item name="appWidgetPadding">@dimen/system_app_widget_internal_padding</item>
+        <item name="appWidgetInnerRadius">@dimen/system_app_widget_inner_radius</item>
     </style>
 </resources>

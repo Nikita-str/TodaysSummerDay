@@ -3,7 +3,13 @@ package com.endless_summer.todays_summer_day
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.Context
+
 import android.widget.RemoteViews
+import java.util.*
+import android.os.Build
+
+
+
 
 /**
  * Implementation of App Widget functionality.
@@ -29,14 +35,26 @@ class SummerWidget : AppWidgetProvider() {
     }
 }
 
+fun getCurrentLocale(context: Context): Locale? {
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+        context.resources.configuration.locales[0]
+    } else {
+        context.resources.configuration.locale
+    }
+}
+
 internal fun updateAppWidget(
     context: Context,
     appWidgetManager: AppWidgetManager,
     appWidgetId: Int
 ) {
-    val widgetText = context.getString(R.string.appwidget_text)
     // Construct the RemoteViews object
     val views = RemoteViews(context.packageName, R.layout.summer_widget)
+
+    //val widgetText = context.getString(R.string.appwidget_text)
+    val calendar = Calendar.getInstance()
+    val cur_mounth = calendar.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.getDefault()) // or last must be getCurrentLocale ?
+    val widgetText = if(cur_mounth != null) cur_mounth.lowercase() else "TODO"
     views.setTextViewText(R.id.appwidget_text, widgetText)
 
     // Instruct the widget manager to update the widget
