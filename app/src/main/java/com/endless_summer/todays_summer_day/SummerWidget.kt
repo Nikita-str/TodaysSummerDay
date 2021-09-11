@@ -43,6 +43,8 @@ fun getCurrentLocale(context: Context): Locale? {
     }
 }
 
+val summerDate = SummerDate()
+
 internal fun updateAppWidget(
     context: Context,
     appWidgetManager: AppWidgetManager,
@@ -51,11 +53,9 @@ internal fun updateAppWidget(
     // Construct the RemoteViews object
     val views = RemoteViews(context.packageName, R.layout.summer_widget)
 
-    //val widgetText = context.getString(R.string.appwidget_text)
-    val calendar = Calendar.getInstance()
-    val cur_mounth = calendar.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.getDefault()) // or last must be getCurrentLocale ?
-    val widgetText = if(cur_mounth != null) cur_mounth.lowercase() else "TODO"
-    views.setTextViewText(R.id.appwidget_text, widgetText)
+    val sum_date = summerDate.GetCurSummerDate()
+    views.setTextViewText(R.id.cur_date, "" + sum_date.monthDay + " " + sum_date.monthName.lowercase())
+    views.setTextViewText(R.id.day_of_summer, "" + sum_date.dayOfSummer + " " + context.getString(R.string.day_of_summer_postfix))
 
     // Instruct the widget manager to update the widget
     appWidgetManager.updateAppWidget(appWidgetId, views)

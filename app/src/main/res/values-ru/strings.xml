@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="day_of_summer_postfix">день лета</string>
+    <string name="summer_day">ЛЕТО!</string>
+    <string name="cur_date">АВГУСТ?</string>
+</resources>

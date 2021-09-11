@@ -1,22 +1,35 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     style="@style/Widget.TodaysSummerDay.AppWidget.Container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:weightSum="2"
     android:theme="@style/Theme.TodaysSummerDay.AppWidgetContainer">
 
     <TextView
-        android:id="@+id/appwidget_text"
+        android:id="@+id/cur_date"
         style="@style/Widget.TodaysSummerDay.AppWidget.InnerView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_centerVertical="true"
-        android:layout_margin="8dp"
-        android:contentDescription="@string/appwidget_text"
-        android:text="@string/appwidget_text"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:autoSizeTextType="uniform"
+        android:text="@string/cur_date"
         android:textSize="24sp"
-        android:textStyle="bold|italic" />
-</RelativeLayout>
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/day_of_summer"
+        style="@style/Widget.TodaysSummerDay.AppWidget.InnerView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:autoSizeTextType="uniform"
+        android:layout_marginStart="20dp"
+        android:text="@string/summer_day"
+        android:textSize="24sp"
+        android:textColor="@color/slightly_gray"
+        android:textStyle="bold" />
+</LinearLayout>
     <!--android:layout_alignParentTop="true"
     android:layout_centerHorizontal="true"
     android:layout_marginTop="220dp"-->
