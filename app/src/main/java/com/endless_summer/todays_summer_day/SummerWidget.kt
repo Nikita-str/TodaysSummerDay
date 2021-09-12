@@ -7,48 +7,65 @@ import android.content.Intent
 
 import android.widget.RemoteViews
 import java.util.*
-import android.os.Build
-import android.app.AlarmManager
 
-import android.app.PendingIntent
 import android.content.ComponentName
-import android.content.IntentFilter
+import android.os.Handler
+import android.os.Looper
 import android.widget.Toast
-
-const val WIDGET_UPD = "ALARM_WIDGET_UPD";
 
 class SummerWidget : AppWidgetProvider() {
     override fun onUpdate(context: Context, awm: AppWidgetManager, appWidgetIds: IntArray) {
         for (appWidgetId in appWidgetIds) updateAppWidget(context, awm, appWidgetId)
     }
 
-    companion object AlarmHelper{
-        private fun getAlarmIntent(ctx: Context): PendingIntent{
-            val intent = Intent(ctx, SummerWidget::class.java)
-            intent.action = WIDGET_UPD
-            return PendingIntent.getBroadcast(ctx, 0, intent, 0)
+    companion object HandlerHelper{
+        fun getCurMs(): Long {
+            val c = Calendar.getInstance()
+            var ret: Long = c[Calendar.HOUR_OF_DAY].toLong()
+            ret = ret * MIN_IN_HOUR + c[Calendar.MINUTE].toLong()
+            ret = ret * SEC_IN_MIN + c[Calendar.SECOND].toLong()
+            ret = ret * MS_IN_SEC + c[Calendar.MILLISECOND].toLong()
+            return ret
         }
+        var curRunnable : Runnable? = null
+        var handler: Handler? = null
+    }
 
-        fun alarmSub(ctx: Context) {
-            val interval = AlarmManager.INTERVAL_DAY
-            val alarm = ctx.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-            val alarm_intent = getAlarmIntent(ctx)
-            alarm.setInexactRepeating(AlarmManager.RTC, MS_IN_SEC.toLong(), interval, alarm_intent)
-        }
 
-        fun alarmUnsub(ctx: Context) {
-            (ctx.getSystemService(Context.ALARM_SERVICE) as AlarmManager).cancel(getAlarmIntent(ctx))
+    fun callUpdByCtx(ctx: Context) {
+        val widget_mgr = AppWidgetManager.getInstance(ctx)
+        val component_name = ComponentName(ctx.packageName, javaClass.name)
+        val ids = widget_mgr.getAppWidgetIds(component_name)
+        onUpdate(ctx, widget_mgr, ids)
+    }
+
+    fun subUpdByHandler(ctx: Context) {
+        if(handler == null) handler = Handler(Looper.myLooper()!!)
+        curRunnable = object : Runnable {
+            override fun run() {
+                //Toast.makeText(ctx, "UPD BY HANDLER", Toast.LENGTH_LONG).show()//TODO:DEL
+                callUpdByCtx(ctx)
+                subUpdByHandler(ctx)
+            }
         }
+        handler!!.postDelayed(curRunnable!!, MS_IN_SEC.toLong() + MS_IN_DAY - getCurMs())
+    }
+
+    fun unsubUpdByHandler(ctx: Context) {
+        if(handler == null)return
+        if(curRunnable != null)handler!!.removeCallbacks(curRunnable!!)
+        handler = null // TODO:?
+        curRunnable = null
     }
 
     override fun onEnabled(context: Context) {
         super.onEnabled(context)
-        alarmSub(context)
+        subUpdByHandler(context)
     }
 
     override fun onDisabled(context: Context) {
         super.onDisabled(context)
-        alarmUnsub(context)
+        unsubUpdByHandler(context)
     }
 
     override fun onReceive(context: Context?, intent: Intent?) {
@@ -57,20 +74,15 @@ class SummerWidget : AppWidgetProvider() {
         if(context == null || intent == null) return
 
         val action = intent.getAction()
-        val is_upd = action.equals(WIDGET_UPD)
         val is_time_changed =
             action.equals(Intent.ACTION_TIME_CHANGED) || action.equals(Intent.ACTION_DATE_CHANGED)
-        if (is_upd || is_time_changed) {
-            if(is_time_changed){
-                // due to issue#6
-                alarmUnsub(context)
-                alarmSub(context)
-            }
+        if (is_time_changed) {
+            //+ due to issue#6
+            unsubUpdByHandler(context)
+            subUpdByHandler(context)
+            //- due ...
 
-            val widget_mgr = AppWidgetManager.getInstance(context)
-            val component_name = ComponentName(context.packageName, javaClass.name)
-            val ids = widget_mgr.getAppWidgetIds(component_name)
-            onUpdate(context, widget_mgr, ids)
+            callUpdByCtx(context)
         }
     }
 }
