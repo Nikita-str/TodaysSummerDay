@@ -12,67 +12,68 @@ import android.app.AlarmManager
 
 import android.app.PendingIntent
 import android.content.ComponentName
+import android.content.IntentFilter
 import android.widget.Toast
 
 const val WIDGET_UPD = "ALARM_WIDGET_UPD";
 
 class SummerWidget : AppWidgetProvider() {
-    override fun onUpdate(
-        context: Context,
-        appWidgetManager: AppWidgetManager,
-        appWidgetIds: IntArray
-    ) {
-        for (appWidgetId in appWidgetIds) {
-            updateAppWidget(context, appWidgetManager, appWidgetId)
+    override fun onUpdate(context: Context, awm: AppWidgetManager, appWidgetIds: IntArray) {
+        for (appWidgetId in appWidgetIds) updateAppWidget(context, awm, appWidgetId)
+    }
+
+    companion object AlarmHelper{
+        private fun getAlarmIntent(ctx: Context): PendingIntent{
+            val intent = Intent(ctx, SummerWidget::class.java)
+            intent.action = WIDGET_UPD
+            return PendingIntent.getBroadcast(ctx, 0, intent, 0)
+        }
+
+        fun alarmSub(ctx: Context) {
+            val interval = AlarmManager.INTERVAL_DAY
+            val alarm = ctx.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            val alarm_intent = getAlarmIntent(ctx)
+            alarm.setInexactRepeating(AlarmManager.RTC, MS_IN_SEC.toLong(), interval, alarm_intent)
+        }
+
+        fun alarmUnsub(ctx: Context) {
+            (ctx.getSystemService(Context.ALARM_SERVICE) as AlarmManager).cancel(getAlarmIntent(ctx))
         }
     }
 
     override fun onEnabled(context: Context) {
         super.onEnabled(context)
-        val intent = Intent(context, javaClass)
-        intent.action = WIDGET_UPD
-        val alarm_intent = PendingIntent.getBroadcast(context, 0, intent, 0)
-
-        val c = Calendar.getInstance()
-        c[Calendar.HOUR_OF_DAY] = 0
-        c[Calendar.MINUTE] = 0
-        c[Calendar.SECOND] = 1
-        c[Calendar.MILLISECOND] = 0
-
-        val alarm = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        alarm.setInexactRepeating(AlarmManager.RTC, c.timeInMillis, AlarmManager.INTERVAL_DAY, alarm_intent)
+        alarmSub(context)
     }
 
     override fun onDisabled(context: Context) {
         super.onDisabled(context)
-
-        val intent = Intent(context, javaClass)
-        intent.action = WIDGET_UPD
-        val alarm_intent = PendingIntent.getBroadcast(context, 0, intent, 0)
-
-        val alarm = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        alarm.cancel(alarm_intent)
+        alarmUnsub(context)
     }
 
     override fun onReceive(context: Context?, intent: Intent?) {
         super.onReceive(context, intent)
 
-        if(context == null) return
+        if(context == null || intent == null) return
 
-        if (intent != null && intent.getAction().equals(WIDGET_UPD)) {
+        val action = intent.getAction()
+        val is_upd = action.equals(WIDGET_UPD)
+        val is_time_changed =
+            action.equals(Intent.ACTION_TIME_CHANGED) || action.equals(Intent.ACTION_DATE_CHANGED)
+        if (is_upd || is_time_changed) {
+            Toast.makeText(context, action, Toast.LENGTH_LONG).show() // TODO:DEL
+
+            if(is_time_changed){
+                // due to issue#6
+                alarmUnsub(context)
+                alarmSub(context)
+            }
+
             val widget_mgr = AppWidgetManager.getInstance(context)
             val component_name = ComponentName(context.packageName, javaClass.name)
             val ids = widget_mgr.getAppWidgetIds(component_name)
             onUpdate(context, widget_mgr, ids)
         }
-    }
-}
-
-fun getCurrentLocale(context: Context): Locale? {
-    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-        context.resources.configuration.locales[0]
-    } else {
-        context.resources.configuration.locale
     }
 }
 
@@ -86,8 +87,13 @@ internal fun updateAppWidget(
     val views = RemoteViews(context.packageName, R.layout.summer_widget)
 
     val sum_date = summerDate.GetCurSummerDate()
-    views.setTextViewText(R.id.cur_date, "" + sum_date.monthDay + " " + sum_date.monthName.lowercase())
-    views.setTextViewText(R.id.day_of_summer, "" + sum_date.dayOfSummer + " " + context.getString(R.string.day_of_summer_postfix))
+
+    val str_summer_date = "" + sum_date.monthDay + " " + sum_date.monthName.lowercase()
+    val str_dos_postfix = " " + context.getString(R.string.day_of_summer_postfix)
+    val str_day_of_summer = "" + sum_date.dayOfSummer + str_dos_postfix
+
+    views.setTextViewText(R.id.cur_date, str_summer_date)
+    views.setTextViewText(R.id.day_of_summer, str_day_of_summer)
 
     appWidgetManager.updateAppWidget(appWidgetId, views)
 }
