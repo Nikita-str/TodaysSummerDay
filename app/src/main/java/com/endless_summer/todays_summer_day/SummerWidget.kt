@@ -61,8 +61,6 @@ class SummerWidget : AppWidgetProvider() {
         val is_time_changed =
             action.equals(Intent.ACTION_TIME_CHANGED) || action.equals(Intent.ACTION_DATE_CHANGED)
         if (is_upd || is_time_changed) {
-            Toast.makeText(context, action, Toast.LENGTH_LONG).show() // TODO:DEL
-
             if(is_time_changed){
                 // due to issue#6
                 alarmUnsub(context)
