@@ -86,7 +86,7 @@ class SummerWidget : AppWidgetProvider() {
             val work = OneTimeWorkRequestBuilder<UpdateWorker>().setInitialDelay(dt, TimeUnit.MILLISECONDS).build()
             WorkManager.getInstance(ctx).enqueue(work)
 
-            val inf = PeriodicWorkRequestBuilder<UpdateWorker>(MS_IN_DAY, TimeUnit.MILLISECONDS)
+            val inf = PeriodicWorkRequestBuilder<InfUpdWorker>(MS_IN_DAY, TimeUnit.MILLISECONDS)
                 .setInitialDelay(dt, TimeUnit.MILLISECONDS).build()
             WorkManager.getInstance(ctx.applicationContext).enqueue(inf)
 
