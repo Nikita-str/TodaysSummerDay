@@ -21,9 +21,7 @@ import android.os.Looper
 import android.util.Log
 import android.widget.Chronometer
 import android.widget.Toast
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.PeriodicWorkRequestBuilder
-import androidx.work.WorkManager
+import androidx.work.*
 import java.util.concurrent.TimeUnit
 import kotlin.contracts.contract
 
@@ -35,24 +33,13 @@ class SummerWidget : AppWidgetProvider() {
     override fun onUpdate(ctx: Context, awMan: AppWidgetManager, awIds: IntArray) =
         staticUpdate(ctx, awMan, awIds)
 
-    override fun onAppWidgetOptionsChanged(ctx: Context?, awMan: AppWidgetManager?, awId: Int, bundle: Bundle?) {
-        Log.i(TAG, "on_aw_options_changed")
-        super.onAppWidgetOptionsChanged(ctx, awMan, awId, bundle)
-    }
-
-    override fun onRestored(context: Context?, oldWidgetIds: IntArray?, newWidgetIds: IntArray?) {
-        Log.i(TAG, "on_restored")
-        super.onRestored(context, oldWidgetIds, newWidgetIds)
-    }
-
     companion object HandlerHelper{
-
         var broadcast_rec = BroadRec()
 
         fun sendUpdIntent(ctx: Context){
             val intent = Intent(ctx, SummerWidget::class.java)
             intent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE)
-            val component_name = ComponentName(ctx.packageName, SummerWidget::class.java.name)
+            val component_name = ComponentName(ctx.applicationContext, SummerWidget::class.java)
             val ids = AppWidgetManager.getInstance(ctx).getAppWidgetIds(component_name)
             intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
             ctx.sendBroadcast(intent)
@@ -80,23 +67,44 @@ class SummerWidget : AppWidgetProvider() {
         }
 
         var work_id: UUID? = null
+        var inf_work_id: UUID? = null
+        const val UNIQUE_WORK = "upd_summer_day"
+        const val UNIQUE_INF_WORK = "inf_upd_summer_day"
 
         fun sub(ctx: Context){
             val dt = MS_IN_SEC.toLong() + MS_IN_DAY - getCurMs()
-            val work = OneTimeWorkRequestBuilder<UpdateWorker>().setInitialDelay(dt, TimeUnit.MILLISECONDS).build()
-            WorkManager.getInstance(ctx).enqueue(work)
 
-            val inf = PeriodicWorkRequestBuilder<InfUpdWorker>(MS_IN_DAY, TimeUnit.MILLISECONDS)
+            val work = OneTimeWorkRequestBuilder<UpdateWorker>()
                 .setInitialDelay(dt, TimeUnit.MILLISECONDS).build()
-            WorkManager.getInstance(ctx.applicationContext).enqueue(inf)
-
+            WorkManager.getInstance(ctx.applicationContext)
+                .enqueueUniqueWork(UNIQUE_WORK, ExistingWorkPolicy.REPLACE,  work)
             work_id = work.id
+
             Log.i(TAG, "sub{ctx:$ctx dt:$dt w:$work}")
+        }
+
+        fun subInf(ctx: Context){
+            val inf_work = PeriodicWorkRequestBuilder<InfUpdWorker>(
+                MS_IN_DAY,
+                TimeUnit.MILLISECONDS,
+                PeriodicWorkRequest.MIN_PERIODIC_FLEX_MILLIS,
+                TimeUnit.MILLISECONDS).setInitialDelay(
+                PeriodicWorkRequest.MIN_PERIODIC_FLEX_MILLIS + MS_IN_MIN - getCurMs() - MS_IN_YEAR,
+                TimeUnit.MILLISECONDS).build()
+            WorkManager.getInstance(ctx.applicationContext)
+                .enqueueUniquePeriodicWork(UNIQUE_INF_WORK, ExistingPeriodicWorkPolicy.REPLACE, inf_work)
+            inf_work_id = inf_work.id
         }
 
         fun unsub(ctx: Context){
             Log.i(TAG, "unsub{ctx:$ctx}")
             val wid = work_id
+
+            if(wid != null)WorkManager.getInstance(ctx).cancelWorkById(wid)
+        }
+
+        fun unsubInf(ctx: Context){
+            val wid = inf_work_id
             if(wid != null)WorkManager.getInstance(ctx).cancelWorkById(wid)
         }
     }
@@ -104,6 +112,10 @@ class SummerWidget : AppWidgetProvider() {
     override fun onEnabled(context: Context) {
         Log.i(TAG, "on_enabled")
         sub(context)
+        subInf(context)
+
+        val infi = IntentFilter(Intent.ACTION_TIME_CHANGED)
+        context.applicationContext.registerReceiver(broadcast_rec, infi)
 
         super.onEnabled(context)
     }
@@ -111,6 +123,8 @@ class SummerWidget : AppWidgetProvider() {
     override fun onDisabled(context: Context) {
         Log.i(TAG, "on_enabled")
         unsub(context)
+        unsubInf(context)
+
         super.onDisabled(context)
     }
 
@@ -131,7 +145,7 @@ class SummerWidget : AppWidgetProvider() {
         Log.i(TAG, "receive[ACT]{$action}  ok:$is_time_changed")
         if (is_time_changed) {
             //+ due to issue#6
-            unsub(context)
+            //unsub(context)
             sub(context)
             //- due ...
 

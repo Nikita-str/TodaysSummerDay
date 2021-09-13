@@ -7,6 +7,8 @@ import android.util.Log
 
 class BroadRec : BroadcastReceiver() {
     override fun onReceive(p0: Context?, intent: Intent?) {
-        Log.i(TAG, "BC:on_rec{int:$intent}")
+        Log.i(TAG, "BR:on_rec{int:$intent}")
+        if(p0 == null)return
+        SummerWidget.callUpdByCtx(p0)
     }
 }

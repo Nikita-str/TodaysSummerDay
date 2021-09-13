@@ -13,6 +13,7 @@ import android.widget.TextView
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        /*
         Log.i(TAG, "MAIN_ACTIVITY")
 
         val intentFilter = IntentFilter(BROADCAST_REC)
@@ -28,6 +29,8 @@ class MainActivity : AppCompatActivity() {
         //setContentView(R.layout.activity_main)
         super.onCreate(savedInstanceState)
         finish()
+         */
+        super.onCreate(savedInstanceState)
     }
 
 }
