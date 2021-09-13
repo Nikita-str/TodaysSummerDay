@@ -11,7 +11,8 @@ const val SEC_IN_MIN = 60
 const val MIN_IN_HOUR = 60
 const val HOUR_IN_DAY = 24
 
-const val MS_IN_DAY = (MS_IN_SEC * SEC_IN_MIN).toLong() * MIN_IN_HOUR * HOUR_IN_DAY
+const val MS_IN_HOUR = (MS_IN_SEC * SEC_IN_MIN).toLong() * MIN_IN_HOUR
+const val MS_IN_DAY = MS_IN_HOUR * HOUR_IN_DAY
 
 
 const val DAYS_IN_JUNE = 30

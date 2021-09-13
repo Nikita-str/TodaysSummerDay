@@ -23,6 +23,15 @@
             android:gravity="bottom|start"
             android:textSize="24sp"
             android:textStyle="bold" />
+        <!-- Chronometer
+            android:id="@+id/chrono"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="5"
+            android:autoSizeTextType="uniform"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            / -->
         <ImageView
             android:layout_height="match_parent"
             android:layout_width="match_parent"

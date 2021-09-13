@@ -1,5 +1,9 @@
 package com.endless_summer.todays_summer_day
 
+import android.annotation.SuppressLint
+import android.app.ActivityManager
+import android.app.AlarmManager
+import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.Context
@@ -9,9 +13,12 @@ import android.widget.RemoteViews
 import java.util.*
 
 import android.content.ComponentName
+import android.os.Build
+import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import android.widget.Chronometer
 import android.widget.Toast
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
@@ -21,8 +28,19 @@ import java.util.concurrent.TimeUnit
 const val TAG = "todays_summer_day"
 
 class SummerWidget : AppWidgetProvider() {
+
     override fun onUpdate(ctx: Context, awMan: AppWidgetManager, awIds: IntArray) =
         staticUpdate(ctx, awMan, awIds)
+
+    override fun onAppWidgetOptionsChanged(ctx: Context?, awMan: AppWidgetManager?, awId: Int, bundle: Bundle?) {
+        Log.i(TAG, "on_aw_options_changed")
+        super.onAppWidgetOptionsChanged(ctx, awMan, awId, bundle)
+    }
+
+    override fun onRestored(context: Context?, oldWidgetIds: IntArray?, newWidgetIds: IntArray?) {
+        Log.i(TAG, "on_restored")
+        super.onRestored(context, oldWidgetIds, newWidgetIds)
+    }
 
     companion object HandlerHelper{
 
@@ -35,8 +53,13 @@ class SummerWidget : AppWidgetProvider() {
             ctx.sendBroadcast(intent)
         }
 
+        @SuppressLint("UnspecifiedImmutableFlag")
         fun staticUpdate(ctx: Context, awMan: AppWidgetManager, awIds: IntArray) {
             Log.i(TAG, "UPD{ctx:$ctx ids:$awIds}")
+            val am = ctx.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            val intent = Intent(ctx, FictionService::class.java)
+            val service = PendingIntent.getService(ctx, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT)
+            am.setInexactRepeating(AlarmManager.RTC, getCurMs(), MS_IN_HOUR / 4, service)
             for (aw_id in awIds) updateAppWidget(ctx, awMan, aw_id)
         }
 
@@ -74,13 +97,13 @@ class SummerWidget : AppWidgetProvider() {
     }
 
     override fun onEnabled(context: Context) {
-        super.onEnabled(context)
-        //subUpdByHandler(context)
+        Log.i(TAG, "on_enabled")
         sub(context)
+        super.onEnabled(context)
     }
 
     override fun onDisabled(context: Context) {
-        //unsubUpdByHandler(context)
+        Log.i(TAG, "on_enabled")
         unsub(context)
         super.onDisabled(context)
     }
