@@ -11,14 +11,42 @@ import java.util.*
 import android.content.ComponentName
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.widget.Toast
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
+import java.util.concurrent.TimeUnit
+
+const val TAG = "todays_summer_day"
 
 class SummerWidget : AppWidgetProvider() {
-    override fun onUpdate(context: Context, awm: AppWidgetManager, appWidgetIds: IntArray) {
-        for (appWidgetId in appWidgetIds) updateAppWidget(context, awm, appWidgetId)
-    }
+    override fun onUpdate(ctx: Context, awMan: AppWidgetManager, awIds: IntArray) =
+        staticUpdate(ctx, awMan, awIds)
 
     companion object HandlerHelper{
+
+        fun sendUpdIntent(ctx: Context){
+            val intent = Intent(ctx, SummerWidget::class.java)
+            intent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE)
+            val component_name = ComponentName(ctx.packageName, SummerWidget::class.java.name)
+            val ids = AppWidgetManager.getInstance(ctx).getAppWidgetIds(component_name)
+            intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
+            ctx.sendBroadcast(intent)
+        }
+
+        fun staticUpdate(ctx: Context, awMan: AppWidgetManager, awIds: IntArray) {
+            Log.i(TAG, "UPD{ctx:$ctx ids:$awIds}")
+            for (aw_id in awIds) updateAppWidget(ctx, awMan, aw_id)
+        }
+
+        fun callUpdByCtx(ctx: Context) {
+            val widget_mgr = AppWidgetManager.getInstance(ctx)
+            val component_name = ComponentName(ctx.packageName, SummerWidget::class.java.name)
+            val ids = widget_mgr.getAppWidgetIds(component_name)
+            staticUpdate(ctx, widget_mgr, ids)
+        }
+
         fun getCurMs(): Long {
             val c = Calendar.getInstance()
             var ret: Long = c[Calendar.HOUR_OF_DAY].toLong()
@@ -27,59 +55,55 @@ class SummerWidget : AppWidgetProvider() {
             ret = ret * MS_IN_SEC + c[Calendar.MILLISECOND].toLong()
             return ret
         }
-        var curRunnable : Runnable? = null
-        var handler: Handler? = null
-    }
 
+        var work_id: UUID? = null
 
-    fun callUpdByCtx(ctx: Context) {
-        val widget_mgr = AppWidgetManager.getInstance(ctx)
-        val component_name = ComponentName(ctx.packageName, javaClass.name)
-        val ids = widget_mgr.getAppWidgetIds(component_name)
-        onUpdate(ctx, widget_mgr, ids)
-    }
-
-    fun subUpdByHandler(ctx: Context) {
-        if(handler == null) handler = Handler(Looper.myLooper()!!)
-        curRunnable = object : Runnable {
-            override fun run() {
-                //Toast.makeText(ctx, "UPD BY HANDLER", Toast.LENGTH_LONG).show()//TODO:DEL
-                callUpdByCtx(ctx)
-                subUpdByHandler(ctx)
-            }
+        fun sub(ctx: Context){
+            val dt = MS_IN_SEC.toLong() + MS_IN_DAY - getCurMs()
+            val work = OneTimeWorkRequestBuilder<UpdateWorker>().setInitialDelay(dt, TimeUnit.MILLISECONDS).build()
+            WorkManager.getInstance(ctx).enqueue(work)
+            work_id = work.id
+            Log.i(TAG, "sub{ctx:$ctx dt:$dt w:$work}")
         }
-        handler!!.postDelayed(curRunnable!!, MS_IN_SEC.toLong() + MS_IN_DAY - getCurMs())
-    }
 
-    fun unsubUpdByHandler(ctx: Context) {
-        if(handler == null)return
-        if(curRunnable != null)handler!!.removeCallbacks(curRunnable!!)
-        handler = null // TODO:?
-        curRunnable = null
+        fun unsub(ctx: Context){
+            Log.i(TAG, "unsub{ctx:$ctx}")
+            val wid = work_id
+            if(wid != null)WorkManager.getInstance(ctx).cancelWorkById(wid)
+        }
     }
 
     override fun onEnabled(context: Context) {
         super.onEnabled(context)
-        subUpdByHandler(context)
+        //subUpdByHandler(context)
+        sub(context)
     }
 
     override fun onDisabled(context: Context) {
+        //unsubUpdByHandler(context)
+        unsub(context)
         super.onDisabled(context)
-        unsubUpdByHandler(context)
+    }
+
+    override fun onDeleted(context: Context?, appWidgetIds: IntArray?) {
+        Log.i(TAG, "deleted{ctx:$context}")
+        super.onDeleted(context, appWidgetIds)
     }
 
     override fun onReceive(context: Context?, intent: Intent?) {
         super.onReceive(context, intent)
 
+        Log.i(TAG, "receive{ctx:$context intent:$intent}")
         if(context == null || intent == null) return
 
         val action = intent.getAction()
         val is_time_changed =
             action.equals(Intent.ACTION_TIME_CHANGED) || action.equals(Intent.ACTION_DATE_CHANGED)
+        Log.i(TAG, "receive[ACT]{$action}  ok:$is_time_changed")
         if (is_time_changed) {
             //+ due to issue#6
-            unsubUpdByHandler(context)
-            subUpdByHandler(context)
+            unsub(context)
+            sub(context)
             //- due ...
 
             callUpdByCtx(context)
