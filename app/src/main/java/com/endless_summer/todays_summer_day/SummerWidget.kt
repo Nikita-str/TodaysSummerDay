@@ -13,6 +13,7 @@ import android.widget.RemoteViews
 import java.util.*
 
 import android.content.ComponentName
+import android.content.IntentFilter
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -24,8 +25,10 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import java.util.concurrent.TimeUnit
+import kotlin.contracts.contract
 
 const val TAG = "todays_summer_day"
+const val BROADCAST_REC = "todays_summer_day_BROADCAST"
 
 class SummerWidget : AppWidgetProvider() {
 
@@ -44,6 +47,8 @@ class SummerWidget : AppWidgetProvider() {
 
     companion object HandlerHelper{
 
+        var broadcast_rec = BroadRec()
+
         fun sendUpdIntent(ctx: Context){
             val intent = Intent(ctx, SummerWidget::class.java)
             intent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE)
@@ -53,13 +58,8 @@ class SummerWidget : AppWidgetProvider() {
             ctx.sendBroadcast(intent)
         }
 
-        @SuppressLint("UnspecifiedImmutableFlag")
         fun staticUpdate(ctx: Context, awMan: AppWidgetManager, awIds: IntArray) {
             Log.i(TAG, "UPD{ctx:$ctx ids:$awIds}")
-            val am = ctx.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-            val intent = Intent(ctx, FictionService::class.java)
-            val service = PendingIntent.getService(ctx, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT)
-            am.setInexactRepeating(AlarmManager.RTC, getCurMs(), MS_IN_HOUR / 4, service)
             for (aw_id in awIds) updateAppWidget(ctx, awMan, aw_id)
         }
 
@@ -85,6 +85,11 @@ class SummerWidget : AppWidgetProvider() {
             val dt = MS_IN_SEC.toLong() + MS_IN_DAY - getCurMs()
             val work = OneTimeWorkRequestBuilder<UpdateWorker>().setInitialDelay(dt, TimeUnit.MILLISECONDS).build()
             WorkManager.getInstance(ctx).enqueue(work)
+
+            val inf = PeriodicWorkRequestBuilder<UpdateWorker>(MS_IN_DAY, TimeUnit.MILLISECONDS)
+                .setInitialDelay(dt, TimeUnit.MILLISECONDS).build()
+            WorkManager.getInstance(ctx.applicationContext).enqueue(inf)
+
             work_id = work.id
             Log.i(TAG, "sub{ctx:$ctx dt:$dt w:$work}")
         }
@@ -99,6 +104,7 @@ class SummerWidget : AppWidgetProvider() {
     override fun onEnabled(context: Context) {
         Log.i(TAG, "on_enabled")
         sub(context)
+
         super.onEnabled(context)
     }
 
@@ -151,6 +157,8 @@ internal fun updateAppWidget(
 
     views.setTextViewText(R.id.cur_date, str_summer_date)
     views.setTextViewText(R.id.day_of_summer, str_day_of_summer)
+
+    //val c = Chronometer(context)
 
     appWidgetManager.updateAppWidget(appWidgetId, views)
 }
